@@ -1,7 +1,7 @@
 module Spree
-  class Calculator::PAC < Calculator::CorreiosBaseCalculator
+  class Calculator::Shipping::PAC < Calculator::Shipping::CorreiosBaseCalculator
     def self.description
-      "PAC"
+      'PAC'
     end
     
     def shipping_method
