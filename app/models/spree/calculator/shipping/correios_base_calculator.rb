@@ -1,10 +1,9 @@
 module Spree
   class Calculator::Shipping::CorreiosBaseCalculator < Spree::ShippingCalculator
-    preference :zipcode,  :string
     preference :token,    :string
     preference :password, :string
-    preference :additional_days,  :integer
-    preference :additional_value, :float
+    preference :additional_days,  :integer, default: 0
+    preference :additional_value, :integer, default: 0
     preference :declared_value,       :boolean, default: false
     preference :receipt_notification, :boolean, default: false
     preference :receive_in_hands,     :boolean, default: false
@@ -14,6 +13,8 @@ module Spree
     def compute_package(object)
       return if object.nil?
       order = if object.is_a?(Spree::Order) then object else object.order end
+
+      stock_location = object.stock_location
 
       require 'correios-frete'
 
@@ -28,7 +29,7 @@ module Spree
       end
       
       calculator = Correios::Frete::Calculador.new do |c|
-        c.cep_origem        = preferred_zipcode
+        c.cep_origem        = stock_location.zipcode
         c.cep_destino       = order.ship_address.zipcode
         c.encomenda         = package
         c.mao_propria       = preferred_receive_in_hands
@@ -41,17 +42,9 @@ module Spree
       webservice = calculator.calculate(shipping_method)
       return 0.0 if webservice.erro?
 
-      if preferred_additional_days.present?
-        @delivery_time = webservice.prazo_entrega + preferred_additional_days
-      else
-        @delivery_time = webservice.prazo_entrega
-      end
+      @delivery_time = webservice.prazo_entrega + preferred_additional_days
 
-      if preferred_additional_value.present?
-        webservice.valor + preferred_additional_value
-      else
-        webservice.valor
-      end
+      webservice.valor + preferred_additional_value
     rescue
       0.0
     end

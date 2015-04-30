@@ -1,4 +1,4 @@
-Spree Zaez Correios
+Spree Zaez Correios [![Build Status](https://travis-ci.org/zaeznet/spree_zaez_correios.svg?branch=3.0-dev)](https://travis-ci.org/zaeznet/spree_zaez_correios)
 =============
 
 This gem implements diverse functions in order to enable the use of services from Brazil's Correios in Spree Commerce

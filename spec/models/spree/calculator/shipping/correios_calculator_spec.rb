@@ -5,7 +5,7 @@ describe Spree::Calculator::Shipping::CorreiosBaseCalculator do
   before { @calculator = Spree::Calculator::Shipping::CorreiosBaseCalculator.new }
 
   it 'should have preferences' do
-    preferences = [:zipcode, :token, :password, :additional_days, :additional_value, :declared_value, :receipt_notification, :receive_in_hands]
+    preferences = [:token, :password, :additional_days, :additional_value, :declared_value, :receipt_notification, :receive_in_hands]
     expect(@calculator.preferences.keys).to eq(preferences)
   end
 
