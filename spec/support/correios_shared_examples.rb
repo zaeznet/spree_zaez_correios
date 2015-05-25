@@ -18,14 +18,21 @@ shared_examples_for 'correios calculator' do
     before do
       address = FactoryGirl.build(:address, zipcode: '17209420')
       variant = FactoryGirl.build(:variant, weight: 1, height: 5, width: 15, depth: 20)
+
       @order = FactoryGirl.build(:order_with_shipments, ship_address: address)
-      @order.line_items << FactoryGirl.build(:line_item, variant: variant, price: 100)
+      line_item = FactoryGirl.build(:line_item, variant: variant, price: 100, order: @order)
+      @order.line_items << line_item
 
       # stock location
       @stock_location = FactoryGirl.build(:stock_location, zipcode: '08465312')
 
+      # shipment
       @shipment = FactoryGirl.build(:shipment, order: @order, stock_location: @stock_location)
-      @order.shipments << @shipment
+      @shipment.inventory_units << FactoryGirl.build(:inventory_unit, variant: variant, order: @order, line_item: line_item, shipment: @shipment)
+
+      # package
+      @package = @shipment.to_package
+      @package.add @shipment.inventory_units.first
 
       # default query
       @default_query = {
@@ -50,7 +57,7 @@ shared_examples_for 'correios calculator' do
     it 'should calculate shipping cost and delivery time' do
       price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{@default_query.to_query}")
 
-      expect(@calculator.compute_package(@shipment)).to eq(price)
+      expect(@calculator.compute_package(@package)).to eq(price)
       expect(@calculator.delivery_time).to eq(delivery_time)
     end
 
@@ -59,7 +66,7 @@ shared_examples_for 'correios calculator' do
 
       @calculator.preferred_additional_days = 3
 
-      @calculator.compute_package(@shipment)
+      @calculator.compute_package(@package)
       expect(@calculator.delivery_time).to eq(delivery_time + 3)
     end
 
@@ -68,7 +75,7 @@ shared_examples_for 'correios calculator' do
 
       @calculator.preferred_additional_value = 10.0
 
-      expect(@calculator.compute_package(@shipment)).to eq(price + 10.0)
+      expect(@calculator.compute_package(@package)).to eq(price + 10.0)
     end
 
     it 'should change price according to declared value' do
@@ -76,7 +83,7 @@ shared_examples_for 'correios calculator' do
       price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{query.to_query}")
 
       @calculator.preferred_declared_value = true
-      expect(@calculator.compute_package(@shipment)).to eq(price)
+      expect(@calculator.compute_package(@package)).to eq(price)
     end
 
     it 'should change price according to in hands' do
@@ -84,7 +91,7 @@ shared_examples_for 'correios calculator' do
       price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{query.to_query}")
 
       @calculator.preferred_receive_in_hands = true
-      expect(@calculator.compute_package(@shipment)).to eq(price)
+      expect(@calculator.compute_package(@package)).to eq(price)
     end
 
     it 'should change price according to receipt notification' do
@@ -92,7 +99,7 @@ shared_examples_for 'correios calculator' do
       price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{query.to_query}")
 
       @calculator.preferred_receipt_notification = true
-      expect(@calculator.compute_package(@shipment)).to eq(price)
+      expect(@calculator.compute_package(@package)).to eq(price)
     end
   end
 end
