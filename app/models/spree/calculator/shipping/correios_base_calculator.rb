@@ -19,7 +19,8 @@ module Spree
       require 'correios-frete'
 
       package = Correios::Frete::Pacote.new
-      order.line_items.map do |item|
+
+      object.contents.each do |item|
         weight = item.variant.weight.to_f
         depth  = item.variant.depth.to_f
         width  = item.variant.width.to_f
@@ -27,7 +28,7 @@ module Spree
         package_item = Correios::Frete::PacoteItem.new(peso: weight, comprimento: depth, largura: width, altura: height)
         package.add_item(package_item)
       end
-      
+
       calculator = Correios::Frete::Calculador.new do |c|
         c.cep_origem        = stock_location.zipcode
         c.cep_destino       = order.ship_address.zipcode
@@ -40,17 +41,13 @@ module Spree
       end
 
       webservice = calculator.calculate(shipping_method)
-      return 0.0 if webservice.erro?
+      return false if webservice.erro?
 
       @delivery_time = webservice.prazo_entrega + preferred_additional_days
 
       webservice.valor + preferred_additional_value
     rescue
-      0.0
-    end
-    
-    def available?(order)
-      true
+      false
     end
     
     def has_contract?
