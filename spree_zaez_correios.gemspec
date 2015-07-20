@@ -3,8 +3,8 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'spree_zaez_correios'
   s.version     = '1.0.0'
-  s.summary     = 'TODO: Add gem summary here'
-  s.description = %[This gem implements diverse functions in order to enable the use of services from Brazil's Correios in Spree Commerce]
+  s.summary     = "Implements diverse functions in order to enable the use of services from Brazil's Correios in Spree Commerce"
+  s.description = s.summary
   s.required_ruby_version = '>= 2.0.0'
 
   s.author    = 'Zaez Team'
