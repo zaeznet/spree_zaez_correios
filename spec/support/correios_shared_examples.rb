@@ -57,7 +57,7 @@ shared_examples_for 'correios calculator' do
     it 'should calculate shipping cost and delivery time' do
       price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{@default_query.to_query}")
 
-      expect(@calculator.compute_package(@package)).to eq(price)
+      expect(@calculator.compute_package(@package)[:cost]).to eq(price)
       expect(@calculator.delivery_time).to eq(delivery_time)
     end
 
@@ -75,7 +75,7 @@ shared_examples_for 'correios calculator' do
 
       @calculator.preferred_additional_value = 10.0
 
-      expect(@calculator.compute_package(@package)).to eq(price + 10.0)
+      expect(@calculator.compute_package(@package)[:cost]).to eq(price + 10.0)
     end
 
     it 'should change price according to declared value' do
@@ -83,7 +83,7 @@ shared_examples_for 'correios calculator' do
       price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{query.to_query}")
 
       @calculator.preferred_declared_value = true
-      expect(@calculator.compute_package(@package)).to eq(price)
+      expect(@calculator.compute_package(@package)[:cost]).to eq(price)
     end
 
     it 'should change price according to in hands' do
@@ -91,7 +91,7 @@ shared_examples_for 'correios calculator' do
       price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{query.to_query}")
 
       @calculator.preferred_receive_in_hands = true
-      expect(@calculator.compute_package(@package)).to eq(price)
+      expect(@calculator.compute_package(@package)[:cost]).to eq(price)
     end
 
     it 'should change price according to receipt notification' do
@@ -99,7 +99,7 @@ shared_examples_for 'correios calculator' do
       price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{query.to_query}")
 
       @calculator.preferred_receipt_notification = true
-      expect(@calculator.compute_package(@package)).to eq(price)
+      expect(@calculator.compute_package(@package)[:cost]).to eq(price)
     end
   end
 end
