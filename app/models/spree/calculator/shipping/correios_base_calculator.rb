@@ -44,10 +44,10 @@ module Spree
       return false if webservice.erro?
 
       @delivery_time = webservice.prazo_entrega + preferred_additional_days
-
-      webservice.valor + preferred_additional_value
+      cost = webservice.valor + preferred_additional_value
+      {cost: cost, delivery_time: @delivery_time}
     rescue
-      false
+      {}
     end
     
     def has_contract?
