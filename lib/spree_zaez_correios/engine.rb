@@ -17,8 +17,8 @@ module SpreeZaezCorreios
 
     initializer 'spree_zaez_correios.register.calculators' do |app|
       app.config.spree.calculators.shipping_methods << Spree::Calculator::Shipping::PAC
-      app.config.spree.calculators.shipping_methods << Spree::Calculator::Shipping::Sedex
-      app.config.spree.calculators.shipping_methods << Spree::Calculator::Shipping::Sedex10
+      app.config.spree.calculators.shipping_methods << Spree::Calculator::Shipping::SEDEX
+      app.config.spree.calculators.shipping_methods << Spree::Calculator::Shipping::SEDEX10
     end
 
     config.to_prepare &method(:activate).to_proc
