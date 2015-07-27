@@ -1,11 +1,16 @@
 Spree::Stock::Estimator.class_eval do
 
-  # Override no metodo para poder salvar o tempo de entrega
+  # Override to save the delivery time
   def calculate_shipping_rates(package, ui_filter)
     shipping_methods(package, ui_filter).map do |shipping_method|
       response = shipping_method.calculator.compute(package)
-      cost = response[:cost]
-      delivery_time = response[:delivery_time]
+      if response.is_a? Hash
+        cost = response[:cost]
+        delivery_time = response[:delivery_time]
+      elsif %w(Float BigDecimal).include? response.class.to_s
+        cost = response
+        delivery_time = nil
+      end
 
       tax_category = shipping_method.tax_category
       if tax_category
