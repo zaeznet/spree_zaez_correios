@@ -4,15 +4,14 @@ shared_examples_for 'correios calculator' do
 
   context 'compute_package' do
 
-    # @param url [String]
+    # Stub the request to Correios Webservice
     #
-    # @return [price Float, delivery_time Integer]
+    # @param params [Hash]
     #
-    def get_correios_price_and_value_for(url)
-      doc = Nokogiri::XML(open(url))
-      price = doc.css('Valor').first.content.sub(/,(\d\d)$/, '.\1').to_f
-      delivery_time = doc.css('PrazoEntrega').first.content.to_i
-      return price, delivery_time
+    def stub_correios_request(params = {})
+      correios_attr = {valor: 10.0, prazo_entrega: 1}.merge!(params)
+      response = Correios::Frete::Servico.new(correios_attr)
+      allow_any_instance_of(Correios::Frete::Calculador).to receive(:calculate).and_return(response)
     end
 
     before do
@@ -33,73 +32,59 @@ shared_examples_for 'correios calculator' do
       # package
       @package = @shipment.to_package
       @package.add @shipment.inventory_units.first
-
-      # default query
-      @default_query = {
-          nCdEmpresa: nil,
-          sDsSenha: nil,
-          sCepOrigem: '08465312',
-          sCepDestino: '17209420',
-          nVlPeso: 1,
-          nCdFormato: 1,
-          nVlComprimento: 20,
-          nVlAltura: 5,
-          nVlLargura: 15,
-          sCdMaoPropria: 'n',
-          nVlValorDeclarado: 0,
-          sCdAvisoRecebimento: 'n',
-          nCdServico: @calculator.shipping_code,
-          nVlDiametro: 0,
-          StrRetorno: 'xml'
-      }
     end
 
     it 'should calculate shipping cost and delivery time' do
-      price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{@default_query.to_query}")
+      stub_correios_request
 
-      expect(@calculator.compute_package(@package)[:cost]).to eq(price)
-      expect(@calculator.delivery_time).to eq(delivery_time)
+      response = @calculator.compute_package(@package)
+      expect(response[:cost]).to eq(10.0)
+      expect(response[:delivery_time]).to eq(1)
     end
 
     it 'should possible add days to delivery time' do
-      price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{@default_query.to_query}")
+      stub_correios_request
 
       @calculator.preferred_additional_days = 3
 
-      @calculator.compute_package(@package)
-      expect(@calculator.delivery_time).to eq(delivery_time + 3)
+      response = @calculator.compute_package(@package)
+      expect(response[:delivery_time]).to eq(4)
     end
 
     it 'should possible add some value to price' do
-      price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{@default_query.to_query}")
+      stub_correios_request
 
       @calculator.preferred_additional_value = 10.0
 
-      expect(@calculator.compute_package(@package)[:cost]).to eq(price + 10.0)
+      response = @calculator.compute_package(@package)
+      expect(response[:cost]).to eq(20.0)
     end
 
     it 'should change price according to declared value' do
-      query = @default_query.merge({nVlValorDeclarado: '100,00'})
-      price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{query.to_query}")
+      stub_correios_request({valor: 15.0, valor_valor_declarado: 100.0})
 
       @calculator.preferred_declared_value = true
-      expect(@calculator.compute_package(@package)[:cost]).to eq(price)
+
+      response = @calculator.compute_package(@package)
+      expect(response[:cost]).to eq(15.0)
     end
 
     it 'should change price according to in hands' do
-      query = @default_query.merge({sCdMaoPropria: 's'})
-      price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{query.to_query}")
+      stub_correios_request({valor: 17.0, valor_mao_propria: 4.0})
 
       @calculator.preferred_receive_in_hands = true
-      expect(@calculator.compute_package(@package)[:cost]).to eq(price)
+
+      response = @calculator.compute_package(@package)
+      expect(response[:cost]).to eq(17.0)
     end
 
     it 'should change price according to receipt notification' do
-      query = @default_query.merge({sCdAvisoRecebimento: 's'})
-      price, delivery_time = get_correios_price_and_value_for("http://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?#{query.to_query}")
+      stub_correios_request({valor: 21.0, valor_aviso_recebimento: 5.0})
 
       @calculator.preferred_receipt_notification = true
-      expect(@calculator.compute_package(@package)[:cost]).to eq(price)
+
+      response = @calculator.compute_package(@package)
+      expect(response[:cost]).to eq(21.0)
     end
   end
 end
