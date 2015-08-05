@@ -15,9 +15,6 @@ module Spree
       order = if object.is_a?(Spree::Order) then object else object.order end
 
       stock_location = object.stock_location
-
-      require 'correios-frete'
-
       package = Correios::Frete::Pacote.new
 
       object.contents.each do |item|
