@@ -11,5 +11,9 @@ module Spree
     def shipping_code
       40215
     end
+
+    def max_weight
+      10
+    end
   end
 end

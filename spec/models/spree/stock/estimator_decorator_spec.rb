@@ -27,6 +27,19 @@ module Spree
           shipping_rates = subject.shipping_rates(package)
           expect(shipping_rates.first.delivery_time).to eq 1
         end
+
+        it 'should not create shipping rate if cost is unknow' do
+          allow_any_instance_of(ShippingMethod).to receive_message_chain(:calculator, :compute).and_return({})
+          shipping_rates = subject.shipping_rates(package)
+          expect(shipping_rates).to eq Array.new
+        end
+
+        it 'should save only cost if delivery time is not provided' do
+          allow_any_instance_of(ShippingMethod).to receive_message_chain(:calculator, :compute).and_return(10.0)
+          shipping_rate = subject.shipping_rates(package).first
+          expect(shipping_rate.cost).to eq 10.0
+          expect(shipping_rate.delivery_time).to be_nil
+        end
       end
     end
   end
