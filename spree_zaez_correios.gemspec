@@ -2,7 +2,7 @@
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'spree_zaez_correios'
-  s.version     = '3.0.4'
+  s.version     = '3.0.5'
   s.summary     = "Implements diverse functions in order to enable the use of services from Brazil's Correios in Spree Commerce"
   s.description = s.summary
   s.required_ruby_version = '>= 2.0.0'

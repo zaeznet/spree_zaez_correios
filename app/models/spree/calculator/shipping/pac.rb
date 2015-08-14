@@ -1,5 +1,6 @@
 module Spree
   class Calculator::Shipping::PAC < Calculator::Shipping::CorreiosBaseCalculator
+
     def self.description
       'PAC'
     end
@@ -18,6 +19,10 @@ module Spree
       else
         41106
       end
+    end
+
+    def max_weight
+      30
     end
   end
 end

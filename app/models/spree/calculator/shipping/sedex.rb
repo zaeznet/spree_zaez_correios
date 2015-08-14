@@ -19,5 +19,9 @@ module Spree
         40010
       end
     end
+
+    def max_weight
+      30
+    end
   end
 end
