@@ -13,9 +13,9 @@ module Spree
     #
     # documentacao em: http://www.correios.com.br/para-voce/precisa-de-ajuda/limites-de-dimensoes-e-de-peso
     #
-    MAX_WIDTH = 105
-    MAX_DEPTH = 105
-    MAX_HEIGHT = 105
+    MAX_WIDTH = 65
+    MAX_DEPTH = 65
+    MAX_HEIGHT = 70
     MAX_DIMENSIONS = 200
 
     attr_reader :delivery_time
@@ -36,49 +36,51 @@ module Spree
 
       pkg = Correios::Frete::Pacote.new
       pkg_dimensions = {width: 0, height: 0, depth: 0, weight: 0}
+      line_dimensions = {width: 0, height: 0, depth: 0}
       packages = [pkg]
 
       package.contents.each do |item|
         return {} unless valid_dimensions?(item.variant)
 
-        new_width = item.variant.width + pkg_dimensions[:width]
-        new_height = item.variant.height + pkg_dimensions[:height]
-        new_depth = item.variant.depth + pkg_dimensions[:depth]
+        new_width = item.variant.width + line_dimensions[:width]
+        new_height = item.variant.height + line_dimensions[:height]
+        new_depth = item.variant.depth + line_dimensions[:depth]
         new_weight = item.variant.weight + pkg_dimensions[:weight]
 
-        if (new_width <= MAX_WIDTH and verify_max_dimensions(pkg_dimensions, item.variant, :width)) and (new_weight <= max_weight)
+        if (new_width <= MAX_WIDTH and verify_max_dimensions(line_dimensions, item.variant, :width)) and (new_weight <= max_weight)
           pkg_dimensions[:weight] += item.variant.weight
 
-          pkg_dimensions[:width] += item.variant.width
-          pkg_dimensions[:height] = pkg_dimensions[:height] >= item.variant.height ? pkg_dimensions[:height] : item.variant.height
-          pkg_dimensions[:depth] = pkg_dimensions[:depth] >= item.variant.depth ? pkg_dimensions[:depth] : item.variant.depth
-        elsif (new_height <= MAX_HEIGHT and verify_max_dimensions(pkg_dimensions, item.variant, :height)) and (new_weight <= max_weight)
+          line_dimensions[:width] += item.variant.width
+          line_dimensions[:height] = line_dimensions[:height] >= item.variant.height ? line_dimensions[:height] : item.variant.height
+          line_dimensions[:depth] = line_dimensions[:depth] >= item.variant.depth ? line_dimensions[:depth] : item.variant.depth
+
+        elsif (new_height <= MAX_HEIGHT and verify_max_dimensions(line_dimensions, item.variant, :height)) and (new_weight <= max_weight)
           pkg_dimensions[:weight] += item.variant.weight
 
-          pkg_dimensions[:height] += item.variant.height
-          pkg_dimensions[:width] = pkg_dimensions[:width] >= item.variant.width ? pkg_dimensions[:width] : item.variant.width
-          pkg_dimensions[:depth] = pkg_dimensions[:depth] >= item.variant.depth ? pkg_dimensions[:depth] : item.variant.depth
-        elsif (new_depth <= MAX_DEPTH and verify_max_dimensions(pkg_dimensions, item.variant, :depth)) and (new_weight <= max_weight)
+          line_dimensions[:height] += item.variant.height
+          line_dimensions[:width] = item.variant.width
+          line_dimensions[:depth] = line_dimensions[:depth] >= item.variant.depth ? line_dimensions[:depth] : item.variant.depth
+
+        elsif (new_depth <= MAX_DEPTH and verify_max_dimensions(line_dimensions, item.variant, :depth)) and (new_weight <= max_weight)
           pkg_dimensions[:weight] += item.variant.weight
 
-          pkg_dimensions[:depth] += item.variant.depth
-          pkg_dimensions[:height] = pkg_dimensions[:height] >= item.variant.height ? pkg_dimensions[:height] : item.variant.height
-          pkg_dimensions[:width] = pkg_dimensions[:width] >= item.variant.width ? pkg_dimensions[:width] : item.variant.width
-        else
-          pkg = Correios::Frete::Pacote.new
-          pkg_dimensions = {width: item.variant.width,
-                            height: item.variant.height,
-                            depth: item.variant.depth,
-                            weight: item.variant.weight}
+          line_dimensions[:depth] += item.variant.depth
+          line_dimensions[:width] = item.variant.width
+          line_dimensions[:height] = item.variant.height
 
-          packages << pkg
         end
-        package_item = Correios::Frete::PacoteItem.new(peso: item.variant.weight.to_f,
-                                                       comprimento: item.variant.depth.to_f,
-                                                       largura: item.variant.width.to_f,
-                                                       altura: item.variant.height.to_f)
-        pkg.add_item(package_item)
+
+        pkg_dimensions[:width] = pkg_dimensions[:width] >= line_dimensions[:width] ? pkg_dimensions[:width] : line_dimensions[:width]
+        pkg_dimensions[:height] = pkg_dimensions[:height] >= line_dimensions[:height] ? pkg_dimensions[:height] : line_dimensions[:height]
+        pkg_dimensions[:depth] = pkg_dimensions[:depth] >= line_dimensions[:depth] ? pkg_dimensions[:depth] : line_dimensions[:depth]
+
       end
+
+      package_item = Correios::Frete::PacoteItem.new(peso: pkg_dimensions[:weight].to_f,
+                                                     comprimento: pkg_dimensions[:depth].to_f,
+                                                     largura: pkg_dimensions[:width].to_f,
+                                                     altura: pkg_dimensions[:height].to_f)
+      pkg.add_item(package_item)
 
       value = 0
       delivery_time = 0
